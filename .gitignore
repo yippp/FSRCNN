@@ -97,3 +97,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+*.xml
+*.iml
+*.jpg
+*.bmp
+*.pth
