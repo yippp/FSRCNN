@@ -27,7 +27,7 @@ class Net(torch.nn.Module):
         self.mid_part = torch.nn.Sequential(*self.layers)
 
         # Deconvolution
-        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=upscale_factor, padding=3, output_padding=1)
+        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=upscale_factor, padding=5, output_padding=0)
 
     def forward(self, x):
         out = self.first_part(x)

@@ -13,7 +13,7 @@ parser.add_argument('--seed', type=int, default=123, help='random seed to use. D
 parser.add_argument('--train_set', type=str, default='91-images', help='name of train set folder')
 parser.add_argument('--test_set', type=str, default='Set5', help='name of test set folder')
 # model configuration
-parser.add_argument('--upscale_factor', type=int, default=4, help="super resolution upscale factor")
+parser.add_argument('--upscale_factor', type=int, default=2, help="super resolution upscale factor")
 
 args = parser.parse_args()
 
