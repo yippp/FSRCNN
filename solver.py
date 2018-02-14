@@ -17,19 +17,18 @@ class solver(object):
         self.criterion = None
         self.optimizer = None
         self.scheduler = None
-        self.GPU_IN_USE = False #torch.cuda.is_available()
+        self.GPU = torch.cuda.is_available()
         self.seed = config.seed
-        self.upscale_factor = config.upscale_factor
         self.training_loader = training_loader
         self.testing_loader = testing_loader
 
     def build_model(self):
-        self.model = Net(n_channels=1, upscale_factor=self.upscale_factor)
+        self.model = Net(n_channels=1)
         self.model.weight_init(mean=0.0, std=0.2)
         self.criterion = nn.MSELoss()
         torch.manual_seed(self.seed)
 
-        if self.GPU_IN_USE:
+        if self.GPU:
             torch.cuda.manual_seed(self.seed)
             self.model.cuda()
             cudnn.benchmark = True
@@ -38,6 +37,7 @@ class solver(object):
         # self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)  # lr decay
+        print(self.model)
 
     def save(self):
         model_out_path = "FSRCNN_model.pth"
@@ -51,12 +51,13 @@ class solver(object):
         self.model.train()
         train_loss = 0
         for batch_num, (data, target) in enumerate(self.training_loader):
-            if self.GPU_IN_USE:
+            if self.GPU:
                 data, target = Variable(data).cuda(), Variable(target).cuda()
             else:
                 data, target = Variable(data), Variable(target)
 
             self.optimizer.zero_grad()
+            a= self.model(data)
             loss = self.criterion(self.model(data), target)
             train_loss += loss.data[0]
             loss.backward()
@@ -72,13 +73,14 @@ class solver(object):
         self.model.eval()
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.testing_loader):
-            if self.GPU_IN_USE:
+            if self.GPU:
                 data, target = Variable(data).cuda(), Variable(target).cuda()
             else:
                 data, target = Variable(data), Variable(target)
 
             prediction = self.model(data)
             mse = self.criterion(prediction, target)
+            # print(mse.data[0])
             psnr = 10 * log10(1 / mse.data[0])
             avg_psnr += psnr
             progress_bar(batch_num, len(self.testing_loader), 'PSNR: %.4f' % (avg_psnr / (batch_num + 1)))

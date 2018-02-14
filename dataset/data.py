@@ -19,7 +19,7 @@ def target_transform(target_size):
     ])
 
 
-def get_training_set(upscale_factor, train_set):
+def get_training_set(train_set):
     train_dir = join("./dataset/train", train_set)
 
     return DatasetFromFolder(train_dir,
@@ -27,7 +27,7 @@ def get_training_set(upscale_factor, train_set):
                              target_transform=target_transform(19))
 
 
-def get_test_set(upscale_factor, test_set):
+def get_test_set(test_set):
     test_dir = join("./dataset/test", test_set)
 
     return DatasetFromFolder(test_dir,

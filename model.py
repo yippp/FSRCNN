@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class Net(torch.nn.Module):
-    def __init__(self, n_channels, upscale_factor, d=64, s=12, m=4):
+    def __init__(self, n_channels, d=32, s=6, m=4):
         super(Net, self).__init__()
 
         # Feature extraction
@@ -27,7 +27,7 @@ class Net(torch.nn.Module):
         self.mid_part = torch.nn.Sequential(*self.layers)
 
         # Deconvolution
-        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=upscale_factor, padding=5, output_padding=0)
+        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=2, padding=5, output_padding=0)
 
     def forward(self, x):
         out = self.first_part(x)
