@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from math import sqrt
 
 
 class Net(torch.nn.Module):
@@ -35,14 +36,13 @@ class Net(torch.nn.Module):
         out = self.last_part(out)
         return out
 
-    def weight_init(self, mean=0.0, std=0.02):
+    def weight_init(self):
         for m in self.modules():
-            # utils.weights_init_normal(m, mean=mean, std=std)
-            if isinstance(m, nn.Conv2d):
-                m.weight.data.normal_(mean, std)
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+                m.weight.data.normal_(0.0, sqrt(2/m.out_channels/m.kernel_size[0]/m.kernel_size[0]))
                 if m.bias is not None:
                     m.bias.data.zero_()
-            if isinstance(m, nn.ConvTranspose2d):
-                m.weight.data.normal_(0.0, 0.0001)
-                if m.bias is not None:
-                    m.bias.data.zero_()
+            # if isinstance(m, nn.ConvTranspose2d):
+            #     m.weight.data.normal_(0.0, sqrt(2/m.out_channels/m.kernel_size/m.kernel_size))
+            #     if m.bias is not None:
+            #         m.bias.data.zero_()

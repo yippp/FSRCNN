@@ -24,7 +24,7 @@ class solver(object):
 
     def build_model(self):
         self.model = Net(n_channels=1)
-        self.model.weight_init(mean=0.0, std=0.2)
+        self.model.weight_init()
         self.criterion = nn.MSELoss()
         torch.manual_seed(self.seed)
 
@@ -34,7 +34,6 @@ class solver(object):
             cudnn.benchmark = True
             self.criterion.cuda()
 
-        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)  # lr decay
         print(self.model)
@@ -45,9 +44,6 @@ class solver(object):
         print("Checkpoint saved to {}".format(model_out_path))
 
     def train(self):
-        """
-        data: [torch.cuda.FloatTensor], 4 batches: [64, 64, 64, 8]
-        """
         self.model.train()
         train_loss = 0
         for batch_num, (data, target) in enumerate(self.training_loader):
@@ -57,7 +53,6 @@ class solver(object):
                 data, target = Variable(data), Variable(target)
 
             self.optimizer.zero_grad()
-            a= self.model(data)
             loss = self.criterion(self.model(data), target)
             train_loss += loss.data[0]
             loss.backward()
@@ -67,9 +62,6 @@ class solver(object):
         print("    Average Loss: {:.4f}".format(train_loss / len(self.training_loader)))
 
     def test(self):
-        """
-        data: [torch.cuda.FloatTensor], 10 batches: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
-        """
         self.model.eval()
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.testing_loader):
