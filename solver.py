@@ -7,6 +7,8 @@ from torch.autograd import Variable
 from model import Net
 from misc import progress_bar
 
+from matplotlib import pyplot as plt
+
 
 class solver(object):
     def __init__(self, config, training_loader, testing_loader):
@@ -23,8 +25,29 @@ class solver(object):
         self.testing_loader = testing_loader
 
     def build_model(self):
+        def plot(tensor, num_cols=8):
+            num_kernels = tensor.shape[0]
+            num_rows = 1 + num_kernels // num_cols
+            fig = plt.figure(figsize=(num_cols, num_rows))
+            for i in range(tensor.shape[0]):
+                ax1 = fig.add_subplot(num_rows, num_cols, i + 1)
+                ax1.imshow(tensor[i][0])
+                ax1.axis('off')
+                ax1.set_xticklabels([])
+                ax1.set_yticklabels([])
+
+            plt.subplots_adjust(wspace=0.1, hspace=0.1)
+            plt.savefig('initial.png')
+            plt.show()
+
         self.model = Net(n_channels=1)
         self.model.weight_init()
+
+        for parameter in self.model.parameters():
+            para = parameter.data.numpy()
+            break
+        plot(para)
+
         self.criterion = nn.MSELoss()
         torch.manual_seed(self.seed)
 
