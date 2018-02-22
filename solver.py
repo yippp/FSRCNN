@@ -38,7 +38,7 @@ class solver(object):
 
             plt.subplots_adjust(wspace=0.1, hspace=0.1)
             plt.savefig('initial.png')
-            plt.show()
+            # plt.show()
 
         self.model = Net(n_channels=1)
         self.model.weight_init()
@@ -82,7 +82,7 @@ class solver(object):
             self.optimizer.step()
             progress_bar(batch_num, len(self.training_loader), 'Loss: %.4f' % (train_loss / (batch_num + 1)))
 
-        print("    Average Loss: {:.4f}".format(train_loss / len(self.training_loader)))
+        # print("    Average Loss: {:.4f}".format(train_loss / len(self.training_loader)))
 
     def test(self):
         self.model.eval()
@@ -98,9 +98,9 @@ class solver(object):
             # print(mse.data[0])
             psnr = 10 * log10(1 / mse.data[0])
             avg_psnr += psnr
-            progress_bar(batch_num, len(self.testing_loader), 'PSNR: %.4f' % (avg_psnr / (batch_num + 1)))
+            progress_bar(batch_num, len(self.testing_loader), 'PSNR: %.4f dB' % (avg_psnr / (batch_num + 1)))
 
-        print("    Average PSNR: {:.4f} dB".format(avg_psnr / len(self.testing_loader)))
+        # print("    Average PSNR: {:.4f} dB".format(avg_psnr / len(self.testing_loader)))
 
     def validate(self):
         self.build_model()

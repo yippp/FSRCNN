@@ -6,7 +6,7 @@ from .dataset import DatasetFromFolder
 
 def input_transform(input_size, target_size):
     return Compose([
-        PairRandomCrop(target_size),
+        # PairRandomCrop(target_size),
         Resize(input_size),
         ToTensor(),
     ])
@@ -14,13 +14,13 @@ def input_transform(input_size, target_size):
 
 def target_transform(target_size):
     return Compose([
-        PairRandomCrop(target_size),
+        # PairRandomCrop(target_size),
         ToTensor(),
     ])
 
 def test_input_transform(input_size, target_size):
     return Compose([
-        CenterCrop(target_size),
+        # CenterCrop(target_size),
         Resize(input_size),
         ToTensor(),
     ])
@@ -28,7 +28,7 @@ def test_input_transform(input_size, target_size):
 
 def test_target_transform(target_size):
     return Compose([
-        CenterCrop(target_size),
+        # CenterCrop(target_size),
         ToTensor(),
     ])
 
