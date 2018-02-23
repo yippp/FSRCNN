@@ -4,13 +4,15 @@ from math import sqrt
 
 
 class Net(torch.nn.Module):
-    def __init__(self, n_channels, d=32, s=6, m=4):
+    def __init__(self, n_channels, d=42, s=8, m=4):
+        # too big s may leed to over-fitting, raise d is a better choice
         super(Net, self).__init__()
 
         # Feature extraction
-        self.first_part = nn.Sequential(nn.Conv2d(in_channels=n_channels, out_channels=d, kernel_size=5, stride=1, padding=2),
+        self.first_part = nn.Sequential(nn.Conv2d(in_channels=n_channels, out_channels=d, kernel_size=5, stride=1, padding=0),
                                         nn.PReLU())
-
+        # H_out = floor((H_in+2*padding-(kernal_size-1)-1)/stride+1)
+        #       = floor(H_in-4)
         self.layers = []
         # Shrinking
         self.layers.append(nn.Sequential(nn.Conv2d(in_channels=d, out_channels=s, kernel_size=1, stride=1, padding=0),
@@ -28,7 +30,10 @@ class Net(torch.nn.Module):
         self.mid_part = torch.nn.Sequential(*self.layers)
 
         # Deconvolution
-        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=2, padding=5, output_padding=0)
+        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=7, stride=3, padding=3, output_padding=0)
+        # H_out = (H_in-1)*stride-2*padding+kernal_size+out_padding
+        #       = (H_in-1)*3+1
+        #test input should be (y-5)*3+1
 
     def forward(self, x):
         out = self.first_part(x)

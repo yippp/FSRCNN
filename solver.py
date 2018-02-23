@@ -6,12 +6,12 @@ import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 from model import Net
 from misc import progress_bar
-
 from matplotlib import pyplot as plt
+from logger import Logger
 
 
 class solver(object):
-    def __init__(self, config, training_loader, testing_loader):
+    def __init__(self, config, training_loader, testing5_loader, testing14_loader):
         self.model = None
         self.lr = config.lr
         self.mom = config.mom
@@ -22,7 +22,10 @@ class solver(object):
         self.GPU = torch.cuda.is_available()
         self.seed = config.seed
         self.training_loader = training_loader
-        self.testing_loader = testing_loader
+        self.testing5_loader = testing5_loader
+        self.testing14_loader = testing14_loader
+        self.logger = Logger('./logs')
+        self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
 
     def build_model(self):
         def plot(tensor, num_cols=8):
@@ -83,11 +86,12 @@ class solver(object):
             progress_bar(batch_num, len(self.training_loader), 'Loss: %.4f' % (train_loss / (batch_num + 1)))
 
         # print("    Average Loss: {:.4f}".format(train_loss / len(self.training_loader)))
+        self.info['loss']= train_loss / len(self.training_loader)
 
-    def test(self):
+    def test5(self):
         self.model.eval()
         avg_psnr = 0
-        for batch_num, (data, target) in enumerate(self.testing_loader):
+        for batch_num, (data, target) in enumerate(self.testing5_loader):
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(target).cuda()
             else:
@@ -98,16 +102,40 @@ class solver(object):
             # print(mse.data[0])
             psnr = 10 * log10(1 / mse.data[0])
             avg_psnr += psnr
-            progress_bar(batch_num, len(self.testing_loader), 'PSNR: %.4f dB' % (avg_psnr / (batch_num + 1)))
+            progress_bar(batch_num, len(self.testing5_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
 
         # print("    Average PSNR: {:.4f} dB".format(avg_psnr / len(self.testing_loader)))
+        self.info['PSNR for Set5'] = avg_psnr / len(self.testing5_loader)
+
+    def test14(self):
+        self.model.eval()
+        avg_psnr = 0
+        for batch_num, (data, target) in enumerate(self.testing14_loader):
+            if self.GPU:
+                data, target = Variable(data).cuda(), Variable(target).cuda()
+            else:
+                data, target = Variable(data), Variable(target)
+
+            prediction = self.model(data)
+            mse = self.criterion(prediction, target)
+            # print(mse.data[0])
+            psnr = 10 * log10(1 / mse.data[0])
+            avg_psnr += psnr
+            progress_bar(batch_num, len(self.testing14_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
+
+        self.info['PSNR for Set14'] = avg_psnr / len(self.testing14_loader)
 
     def validate(self):
         self.build_model()
         for epoch in range(1, self.n_epochs + 1):
             print("\n===> Epoch {} starts:".format(epoch))
             self.train()
-            self.test()
+            print('Testing Set5:')
+            self.test5()
+            print('Testing Set14:')
+            self.test14()
             self.scheduler.step(epoch)
+            for tag, value in self.info.items():
+                self.logger.scalar_summary(tag, value, epoch)
             if epoch == self.n_epochs:
                 self.save()
