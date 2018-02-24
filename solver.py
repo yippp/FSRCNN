@@ -1,4 +1,4 @@
-from math import log10
+from math import log10, ceil
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -8,7 +8,10 @@ from model import Net
 from misc import progress_bar
 from matplotlib import pyplot as plt
 from logger import Logger
-
+from matplotlib.colors import Normalize
+from dataset.dataset import load_img
+from torchvision.transforms import ToTensor
+from scipy.misc import imsave
 
 class solver(object):
     def __init__(self, config, training_loader, testing5_loader, testing14_loader):
@@ -26,30 +29,13 @@ class solver(object):
         self.testing14_loader = testing14_loader
         self.logger = Logger('./logs')
         self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
+        self.final_para = []
+        self.initial_para = []
 
     def build_model(self):
-        def plot(tensor, num_cols=8):
-            num_kernels = tensor.shape[0]
-            num_rows = 1 + num_kernels // num_cols
-            fig = plt.figure(figsize=(num_cols, num_rows))
-            for i in range(tensor.shape[0]):
-                ax1 = fig.add_subplot(num_rows, num_cols, i + 1)
-                ax1.imshow(tensor[i][0])
-                ax1.axis('off')
-                ax1.set_xticklabels([])
-                ax1.set_yticklabels([])
-
-            plt.subplots_adjust(wspace=0.1, hspace=0.1)
-            plt.savefig('initial.png')
-            # plt.show()
-
         self.model = Net(n_channels=1)
         self.model.weight_init()
 
-        for parameter in self.model.parameters():
-            para = parameter.data.numpy()
-            break
-        plot(para)
 
         self.criterion = nn.MSELoss()
         torch.manual_seed(self.seed)
@@ -61,7 +47,8 @@ class solver(object):
             self.criterion.cuda()
 
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
-        self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)  # lr decay
+        # self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)
+        #  lr decay
         print(self.model)
 
     def save(self):
@@ -83,7 +70,7 @@ class solver(object):
             train_loss += loss.data[0]
             loss.backward()
             self.optimizer.step()
-            progress_bar(batch_num, len(self.training_loader), 'Loss: %.4f' % (train_loss / (batch_num + 1)))
+            progress_bar(batch_num, len(self.training_loader), 'Loss: %.5f' % (train_loss / (batch_num + 1)))
 
         # print("    Average Loss: {:.4f}".format(train_loss / len(self.training_loader)))
         self.info['loss']= train_loss / len(self.training_loader)
@@ -118,15 +105,63 @@ class solver(object):
 
             prediction = self.model(data)
             mse = self.criterion(prediction, target)
-            # print(mse.data[0])
             psnr = 10 * log10(1 / mse.data[0])
             avg_psnr += psnr
             progress_bar(batch_num, len(self.testing14_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
 
         self.info['PSNR for Set14'] = avg_psnr / len(self.testing14_loader)
 
+    def predict(self):
+        self.model.eval()
+        butterfly = load_img('./butterfly90.bmp')
+        to_tensor = ToTensor()
+        butterfly = torch.unsqueeze(to_tensor(butterfly), 0)
+        if self.GPU:
+            data = Variable(butterfly).cuda()
+        else:
+            data = Variable(butterfly)
+        prediction = self.model(data).data.cpu().numpy()[0][0]
+        imsave('prediction.bmp', prediction)
+
+    def plot_fig(self,  tensor, filename, num_cols=8):
+        num_kernels = tensor.shape[0]
+        num_rows = ceil(num_kernels / num_cols)
+        fig = plt.figure(figsize=(num_cols, num_rows))
+        for i in range(tensor.shape[0]):
+            ax1 = fig.add_subplot(num_rows, num_cols, i + 1)
+            ax1.imshow(tensor[i][0], norm=Normalize())
+            ax1.axis('off')
+            ax1.set_xticklabels([])
+            ax1.set_yticklabels([])
+
+        plt.subplots_adjust(wspace=0.1, hspace=0.1)
+        plt.savefig(filename + '.png')
+        # plt.show()
+
+    def plot(self, stage):
+        para = []
+        for parameter in self.model.parameters():
+            para.append(parameter.data.cpu().numpy())
+        self.plot_fig(para[0], 'first_layer_' + stage)
+        self.plot_fig(para[-2], 'last_layer_' + stage)
+        return para
+
     def validate(self):
+        def plot_fig(tensor, filename, num_cols=8):
+            num_kernels = tensor.shape[0]
+            num_rows = ceil(num_kernels / num_cols)
+            fig = plt.figure(figsize=(num_cols, num_rows))
+            for i in range(tensor.shape[0]):
+                ax1 = fig.add_subplot(num_rows, num_cols, i + 1)
+                ax1.imshow(tensor[i][0], norm=Normalize())
+                ax1.axis('off')
+                ax1.set_xticklabels([])
+                ax1.set_yticklabels([])
+            plt.subplots_adjust(wspace=0.1, hspace=0.1)
+            plt.savefig(filename + '.png')
+
         self.build_model()
+        self.initial_para = self.plot('initial')
         for epoch in range(1, self.n_epochs + 1):
             print("\n===> Epoch {} starts:".format(epoch))
             self.train()
@@ -134,8 +169,12 @@ class solver(object):
             self.test5()
             print('Testing Set14:')
             self.test14()
-            self.scheduler.step(epoch)
+            # self.scheduler.step(epoch)
             for tag, value in self.info.items():
                 self.logger.scalar_summary(tag, value, epoch)
             if epoch == self.n_epochs:
                 self.save()
+                self.predict()
+                self.final_para = self.plot('final')
+                plot_fig(self.final_para[0] - self.initial_para[0], 'first_delta')
+                plot_fig(self.final_para[-2] - self.initial_para[-2], 'last_delta')

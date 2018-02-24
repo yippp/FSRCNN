@@ -5,9 +5,9 @@ from solver import solver
 
 parser = argparse.ArgumentParser(description='FSRCNN')
 # hyper-parameters
-parser.add_argument('--batch_size', type=int, default=128, help='training batch size')
-parser.add_argument('--n_epochs', type=int, default=100, help='number of epochs to train for')
-parser.add_argument('--lr', type=float, default=1e-3, help='Learning Rate. Default=0.001')
+parser.add_argument('--batch_size', type=int, default=256, help='training batch size. Default=256')
+parser.add_argument('--n_epochs', type=int, default=100, help='number of epochs to train for. Default=100')
+parser.add_argument('--lr', type=float, default=1e-3,  help='Learning Rate. Default=0.001')
 parser.add_argument('--mom', type=float, default=0.9, help='Momentum. Default=0.9')
 parser.add_argument('--seed', type=int, default=123, help='random seed to use. Default=123')
 parser.add_argument('--train_set', type=str, default='91-images', help='name of train set folder')

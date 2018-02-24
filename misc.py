@@ -28,8 +28,8 @@ def progress_bar(current, total, msg=None):
     LAST_T = current_time
     total_time = current_time - BEGIN_T
 
-    time_used = '  Step: {:.2f}s'.format(step_time)
-    time_used += ' | Tot: {:.2f}s'.format(total_time)
+    time_used = '  Step: {:.3f}s'.format(step_time)
+    time_used += ' | Tot: {:.3f}s'.format(total_time)
     if msg:
         time_used += ' | ' + msg
 

@@ -30,19 +30,21 @@ class TrainDataset(data.Dataset):
         self.dx = 19
         self.dy = 19
 
+        x_cut = 19
+        y_cut = 19
+
         for i in range(len(self.image_filenames)):
-            x = 0
-            y = 0
             img = load_img(self.image_filenames[i])
-            while x <= img.size[0] - self.dx:
-                while y <= img.size[1] - self.dy:
-                    patch = img.crop((y, x, y + self.dy, x + self.dx))
-                    check = np.asarray(patch)
-                    if not check.max() == 0:
-                        self.patch.append(patch)
-                    y += self.dy
-                x += self.dx
-                y = 0
+            nx = img.size[0] // x_cut
+            if nx * x_cut != img.size[0]:
+                nx += 1
+            ny = img.size[1] // y_cut
+            if ny * y_cut != img.size[1]:
+                ny += 1
+            for x in range(nx):
+                for y in range(ny):
+                    self.patch.append(img.crop((floor(x/nx*img.size[0]), floor(y/ny*img.size[1]),
+                                      floor(x/nx*img.size[0]) + x_cut, floor(y/ny*img.size[1]) + y_cut)))
 
     def __getitem__(self, index):
         input_image = self.patch[index]

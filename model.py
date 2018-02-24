@@ -4,8 +4,8 @@ from math import sqrt
 
 
 class Net(torch.nn.Module):
-    def __init__(self, n_channels, d=42, s=8, m=4):
-        # too big s may leed to over-fitting, raise d is a better choice
+    def __init__(self, n_channels, d=56, s=12, m=4):
+        # too big network may leads to over-fitting
         super(Net, self).__init__()
 
         # Feature extraction
