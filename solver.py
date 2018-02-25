@@ -29,7 +29,7 @@ class solver(object):
         self.training_loader = training_loader
         self.testing5_loader = testing5_loader
         self.testing14_loader = testing14_loader
-        self.logger = Logger('./logs')
+        self.logger = Logger(self.logs + '/')
         self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
         self.final_para = []
         self.initial_para = []
@@ -73,8 +73,8 @@ class solver(object):
         #  lr decay
         print(self.model)
 
-    def save(self):
-        model_out_path = self.logs + '/FSRCNN_model.pth'
+    def save(self, epoch):
+        model_out_path = self.logs + '/FSRCNN_model' + str(epoch) + '.pth'
         torch.save(self.model, model_out_path)
         print("Checkpoint saved to {}".format(model_out_path))
 
@@ -160,7 +160,7 @@ class solver(object):
         plt.savefig(filename + '.png')
         # plt.show()
 
-    def plot(self, stage):
+    def get_para(self):
         para = []
         for parameter in self.model.parameters():
             para.append(parameter.data.cpu().numpy())
@@ -171,7 +171,7 @@ class solver(object):
     def validate(self):
 
         self.build_model()
-        self.initial_para = self.plot('initial')
+        self.initial_para = self.get_para()
         for epoch in range(1, self.n_epochs + 1):
             print("\n===> Epoch {} starts:".format(epoch))
             self.train()
@@ -182,18 +182,14 @@ class solver(object):
             # self.scheduler.step(epoch)
             for tag, value in self.info.items():
                 self.logger.scalar_summary(tag, value, epoch)
-            if epoch == self.n_epochs:
-                self.save()
+
+            if (epoch % 20 == 0) or (epoch == self.n_epochs):
+                self.save(epoch)
                 self.predict(epoch)
-                self.final_para = self.plot('final')
-                self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
-            elif epoch % 20 == 0:
-                self.predict(epoch)
-                self.final_para = self.plot('mid')
+                self.final_para = self.get_para()
                 self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
                 self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
             elif epoch == 1:
-                self.final_para = self.plot('mid')
+                self.final_para = self.get_para()
                 self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
                 self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
