@@ -1,4 +1,5 @@
 from math import log10, ceil
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -18,6 +19,7 @@ class solver(object):
         self.model = None
         self.lr = config.lr
         self.mom = config.mom
+        self.logs = config.logs
         self.n_epochs = config.n_epochs
         self.criterion = None
         self.optimizer = None
@@ -31,6 +33,8 @@ class solver(object):
         self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
         self.final_para = []
         self.initial_para = []
+        if not os.path.isdir(self.logs):
+            os.makedirs(self.logs)
 
     def build_model(self):
         self.model = Net(n_channels=1)
@@ -47,11 +51,11 @@ class solver(object):
             cudnn.benchmark = True
             self.criterion.cuda()
 
-        self.optimizer = optim.SGD([{'params': self.model.first_part[0].weight},
+        self.optimizer = optim.SGD([{'params': self.model.first_part[0].weight}, # ffeature extraction
                                     {'params': self.model.first_part[0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[0][0].weight},
+                                    {'params': self.model.mid_part[0][0].weight}, # shrinking
                                     {'params': self.model.mid_part[0][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[1].weight},
+                                    {'params': self.model.mid_part[1].weight}, # mapping
                                     {'params': self.model.mid_part[1].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[2].weight},
                                     {'params': self.model.mid_part[2].bias, 'lr': 0.1 * self.lr},
@@ -59,7 +63,9 @@ class solver(object):
                                     {'params': self.model.mid_part[3].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[4].weight},
                                     {'params': self.model.mid_part[4].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.last_part.weight},
+                                    {'params': self.model.mid_part[6][0].weight},  # expanding
+                                    {'params': self.model.mid_part[6][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
                                     {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
         # self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
@@ -68,7 +74,7 @@ class solver(object):
         print(self.model)
 
     def save(self):
-        model_out_path = "./logs/FSRCNN_model.pth"
+        model_out_path = self.logs + '/FSRCNN_model.pth'
         torch.save(self.model, model_out_path)
         print("Checkpoint saved to {}".format(model_out_path))
 
@@ -137,7 +143,7 @@ class solver(object):
         else:
             data = Variable(butterfly)
         prediction = self.model(data).data.cpu().numpy()[0][0]
-        imsave('./logs/prediction_' + str(epoch) + '.bmp', prediction)
+        imsave(self.logs + '/prediction_' + str(epoch) + '.bmp', prediction)
 
     def plot_fig(self,  tensor, filename, num_cols=8):
         num_kernels = tensor.shape[0]
@@ -176,18 +182,18 @@ class solver(object):
             # self.scheduler.step(epoch)
             for tag, value in self.info.items():
                 self.logger.scalar_summary(tag, value, epoch)
-            if epoch % 20 == 0:
-                self.predict(epoch)
-                self.final_para = self.plot('mid')
-                self.plot_fig(self.final_para[0] - self.initial_para[0], './logs/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], './logs/last_' + str(epoch))
-            if epoch == 1:
-                self.final_para = self.plot('mid')
-                self.plot_fig(self.final_para[0] - self.initial_para[0], './logs/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], './logs/last_' + str(epoch))
             if epoch == self.n_epochs:
                 self.save()
                 self.predict(epoch)
                 self.final_para = self.plot('final')
-                self.plot_fig(self.final_para[0] - self.initial_para[0], './logs/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], './logs/last_' + str(epoch))
+                self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
+            elif epoch % 20 == 0:
+                self.predict(epoch)
+                self.final_para = self.plot('mid')
+                self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
+            elif epoch == 1:
+                self.final_para = self.plot('mid')
+                self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
