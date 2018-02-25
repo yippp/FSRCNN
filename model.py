@@ -44,6 +44,7 @@ class Net(torch.nn.Module):
     def weight_init(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-                m.weight.data.normal_(0.0, sqrt(2/m.out_channels/m.kernel_size[0]/m.kernel_size[0]))
+                m.weight.data.normal_(0.0, sqrt(2/m.out_channels/m.kernel_size[0]/m.kernel_size[0])) # MSRA
+                # nn.init.xavier_normal(m.weight) # Xavier
                 if m.bias is not None:
                     m.bias.data.zero_()

@@ -5,14 +5,14 @@ from solver import solver
 
 parser = argparse.ArgumentParser(description='FSRCNN')
 # hyper-parameters
-parser.add_argument('--batch_size', type=int, default=256, help='training batch size. Default=256')
-parser.add_argument('--n_epochs', type=int, default=100, help='number of epochs to train for. Default=100')
+parser.add_argument('--batch_size', type=int, default=128, help='training batch size. Default=128')
+parser.add_argument('--n_epochs', type=int, default=231, help='number of epochs to train for. Default=231')
 parser.add_argument('--lr', type=float, default=1e-3,  help='Learning Rate. Default=0.001')
 parser.add_argument('--mom', type=float, default=0.9, help='Momentum. Default=0.9')
-parser.add_argument('--seed', type=int, default=123, help='random seed to use. Default=123')
-parser.add_argument('--train_set', type=str, default='91-images', help='name of train set folder')
-parser.add_argument('--test_set5', type=str, default='Set5', help='name of test set5 folder')
-parser.add_argument('--test_set14', type=str, default='Set14', help='name of test set14 folder')
+parser.add_argument('--seed', type=int, default=1, help='random seed to use. Default=1')
+parser.add_argument('--train_set', type=str, default='91-images', help='name of train set folder.')
+parser.add_argument('--test_set5', type=str, default='Set5', help='name of test Set5 folder')
+parser.add_argument('--test_set14', type=str, default='Set14', help='name of test Set14 folder')
 
 args = parser.parse_args()
 

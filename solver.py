@@ -38,6 +38,7 @@ class solver(object):
 
 
         self.criterion = nn.MSELoss()
+        # self.criterion = nn.SmoothL1Loss()# Huber loss
         torch.manual_seed(self.seed)
 
         if self.GPU:
@@ -46,13 +47,28 @@ class solver(object):
             cudnn.benchmark = True
             self.criterion.cuda()
 
-        self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
+        self.optimizer = optim.SGD([{'params': self.model.first_part[0].weight},
+                                    {'params': self.model.first_part[0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[0][0].weight},
+                                    {'params': self.model.mid_part[0][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[1].weight},
+                                    {'params': self.model.mid_part[1].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[2].weight},
+                                    {'params': self.model.mid_part[2].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[3].weight},
+                                    {'params': self.model.mid_part[3].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[4].weight},
+                                    {'params': self.model.mid_part[4].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.last_part.weight},
+                                    {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
+                                    lr=self.lr, momentum=self.mom)
+        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
         # self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)
         #  lr decay
         print(self.model)
 
     def save(self):
-        model_out_path = "FSRCNN_model.pth"
+        model_out_path = "./logs/FSRCNN_model.pth"
         torch.save(self.model, model_out_path)
         print("Checkpoint saved to {}".format(model_out_path))
 
@@ -111,7 +127,7 @@ class solver(object):
 
         self.info['PSNR for Set14'] = avg_psnr / len(self.testing14_loader)
 
-    def predict(self):
+    def predict(self, epoch):
         self.model.eval()
         butterfly = load_img('./butterfly90.bmp')
         to_tensor = ToTensor()
@@ -121,7 +137,7 @@ class solver(object):
         else:
             data = Variable(butterfly)
         prediction = self.model(data).data.cpu().numpy()[0][0]
-        imsave('prediction.bmp', prediction)
+        imsave('./logs/prediction_' + str(epoch) + '.bmp', prediction)
 
     def plot_fig(self,  tensor, filename, num_cols=8):
         num_kernels = tensor.shape[0]
@@ -142,23 +158,11 @@ class solver(object):
         para = []
         for parameter in self.model.parameters():
             para.append(parameter.data.cpu().numpy())
-        self.plot_fig(para[0], 'first_layer_' + stage)
-        self.plot_fig(para[-2], 'last_layer_' + stage)
+        # self.plot_fig(para[0], 'first_layer_' + stage)
+        # self.plot_fig(para[-2], 'last_layer_' + stage)
         return para
 
     def validate(self):
-        def plot_fig(tensor, filename, num_cols=8):
-            num_kernels = tensor.shape[0]
-            num_rows = ceil(num_kernels / num_cols)
-            fig = plt.figure(figsize=(num_cols, num_rows))
-            for i in range(tensor.shape[0]):
-                ax1 = fig.add_subplot(num_rows, num_cols, i + 1)
-                ax1.imshow(tensor[i][0], norm=Normalize())
-                ax1.axis('off')
-                ax1.set_xticklabels([])
-                ax1.set_yticklabels([])
-            plt.subplots_adjust(wspace=0.1, hspace=0.1)
-            plt.savefig(filename + '.png')
 
         self.build_model()
         self.initial_para = self.plot('initial')
@@ -172,9 +176,18 @@ class solver(object):
             # self.scheduler.step(epoch)
             for tag, value in self.info.items():
                 self.logger.scalar_summary(tag, value, epoch)
+            if epoch % 20 == 0:
+                self.predict(epoch)
+                self.final_para = self.plot('mid')
+                self.plot_fig(self.final_para[0] - self.initial_para[0], './logs/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], './logs/last_' + str(epoch))
+            if epoch == 1:
+                self.final_para = self.plot('mid')
+                self.plot_fig(self.final_para[0] - self.initial_para[0], './logs/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], './logs/last_' + str(epoch))
             if epoch == self.n_epochs:
                 self.save()
-                self.predict()
+                self.predict(epoch)
                 self.final_para = self.plot('final')
-                plot_fig(self.final_para[0] - self.initial_para[0], 'first_delta')
-                plot_fig(self.final_para[-2] - self.initial_para[-2], 'last_delta')
+                self.plot_fig(self.final_para[0] - self.initial_para[0], './logs/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], './logs/last_' + str(epoch))

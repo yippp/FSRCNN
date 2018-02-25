@@ -3,9 +3,8 @@ import torch.utils.data as data
 from os import listdir
 from os.path import join
 from PIL import Image
-import numpy as np
 from math import floor
-from torchvision.transforms import Compose, CenterCrop, ToTensor, Resize
+from torchvision.transforms import CenterCrop, ToTensor, Resize
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in [".png", ".jpg", ".jpeg", ".bmp"])
@@ -81,7 +80,7 @@ class TestDataset(data.Dataset):
         target = input_image.copy()
         target = self.to_tensor(target)
 
-        self.resize = Resize((x_re, y_re))
+        self.resize = Resize((x_re, y_re), interpolation=Image.BICUBIC)
         input_image = self.resize(input_image)
         input_image = self.to_tensor(input_image)
 
