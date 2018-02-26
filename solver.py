@@ -14,6 +14,8 @@ from dataset.dataset import load_img
 from torchvision.transforms import ToTensor
 from scipy.misc import imsave
 
+from torchviz import make_dot
+
 class solver(object):
     def __init__(self, config, training_loader, testing5_loader, testing14_loader):
         self.model = None
@@ -33,6 +35,8 @@ class solver(object):
         self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
         self.final_para = []
         self.initial_para = []
+        self.graph = True
+
         if not os.path.isdir(self.logs):
             os.makedirs(self.logs)
 
@@ -55,16 +59,16 @@ class solver(object):
                                     {'params': self.model.first_part[0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[0][0].weight}, # shrinking
                                     {'params': self.model.mid_part[0][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[1].weight}, # mapping
-                                    {'params': self.model.mid_part[1].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[2].weight},
-                                    {'params': self.model.mid_part[2].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[3].weight},
-                                    {'params': self.model.mid_part[3].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[4].weight},
-                                    {'params': self.model.mid_part[4].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[6][0].weight},  # expanding
-                                    {'params': self.model.mid_part[6][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[1][0].weight}, # mapping
+                                    {'params': self.model.mid_part[1][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[2][0].weight},
+                                    {'params': self.model.mid_part[2][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[3][0].weight},
+                                    {'params': self.model.mid_part[3][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[4][0].weight},
+                                    {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[5][0].weight},  # expanding
+                                    {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
                                     {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
@@ -87,6 +91,11 @@ class solver(object):
             else:
                 data, target = Variable(data), Variable(target)
 
+            # if self.graph: # plot the network
+            #     graph = make_dot(self.model(data))
+            #     graph.view()
+            #     self.graph = False
+
             self.optimizer.zero_grad()
             loss = self.criterion(self.model(data), target)
             train_loss += loss.data[0]
@@ -94,7 +103,6 @@ class solver(object):
             self.optimizer.step()
             progress_bar(batch_num, len(self.training_loader), 'Loss: %.5f' % (train_loss / (batch_num + 1)))
 
-        # print("    Average Loss: {:.4f}".format(train_loss / len(self.training_loader)))
         self.info['loss']= train_loss / len(self.training_loader)
 
     def test5(self):
@@ -113,7 +121,6 @@ class solver(object):
             avg_psnr += psnr
             progress_bar(batch_num, len(self.testing5_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
 
-        # print("    Average PSNR: {:.4f} dB".format(avg_psnr / len(self.testing_loader)))
         self.info['PSNR for Set5'] = avg_psnr / len(self.testing5_loader)
 
     def test14(self):
@@ -143,6 +150,7 @@ class solver(object):
         else:
             data = Variable(butterfly)
         prediction = self.model(data).data.cpu().numpy()[0][0]
+        self.logger.image_summary('prediction', prediction, epoch)
         imsave(self.logs + '/prediction_' + str(epoch) + '.bmp', prediction)
 
     def plot_fig(self,  tensor, filename, num_cols=8):
@@ -157,7 +165,7 @@ class solver(object):
             ax1.set_yticklabels([])
 
         plt.subplots_adjust(wspace=0.1, hspace=0.1)
-        plt.savefig(filename + '.png')
+        plt.savefig(self.logs + '/' + filename + '.png')
         # plt.show()
 
     def get_para(self):
@@ -169,10 +177,14 @@ class solver(object):
         return para
 
     def validate(self):
-
         self.build_model()
         self.initial_para = self.get_para()
         for epoch in range(1, self.n_epochs + 1):
+            if epoch == 1:
+                self.logger.histo_summary('fisrt layer para', self.initial_para[0], epoch)
+                self.logger.histo_summary('last layer para', self.initial_para[-2], epoch)
+                self.plot_fig(self.initial_para[0], 'first_layer_initial')
+                self.plot_fig(self.initial_para[-2], 'last_layer_initial')
             print("\n===> Epoch {} starts:".format(epoch))
             self.train()
             print('Testing Set5:')
@@ -180,16 +192,17 @@ class solver(object):
             print('Testing Set14:')
             self.test14()
             # self.scheduler.step(epoch)
+            self.final_para = self.get_para()
+            self.logger.histo_summary('fisrt layer para', self.final_para[0] - self.initial_para[0], epoch)
+            self.logger.histo_summary('last layer para', self.final_para[-2] - self.initial_para[-2], epoch)
             for tag, value in self.info.items():
                 self.logger.scalar_summary(tag, value, epoch)
 
             if (epoch % 20 == 0) or (epoch == self.n_epochs):
                 self.save(epoch)
                 self.predict(epoch)
-                self.final_para = self.get_para()
-                self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
+                self.plot_fig(self.final_para[0] - self.initial_para[0], '/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], '/last_' + str(epoch))
             elif epoch == 1:
-                self.final_para = self.get_para()
-                self.plot_fig(self.final_para[0] - self.initial_para[0], self.logs + '/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], self.logs + '/last_' + str(epoch))
+                self.plot_fig(self.final_para[0] - self.initial_para[0], '/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], '/last_' + str(epoch))
