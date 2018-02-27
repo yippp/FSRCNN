@@ -1,30 +1,13 @@
 from os.path import join
-from torchvision.transforms import Compose, ToTensor, Resize
-from .dataset import TrainDataset, TestDataset
-from PIL import Image
+from .dataset import LoadH5, LoadImg
 
-def input_transform(input_size):
-    return Compose([
-        Resize(input_size, interpolation=Image.BICUBIC),
-        ToTensor(),
-    ])
+def get_h5_set(train_set):
+    train_dir = join("./dataset", train_set)
+
+    return LoadH5(train_dir)
 
 
-def target_transform():
-    return Compose([
-        ToTensor(),
-    ])
+def get_img_set(test_set):
+    test_dir = join("./dataset", test_set)
 
-
-def get_training_set(train_set):
-    train_dir = join("./dataset/train", train_set)
-
-    return TrainDataset(train_dir,
-                        input_transform=input_transform(11),
-                        target_transform=target_transform())
-
-
-def get_test_set(test_set):
-    test_dir = join("./dataset/test", test_set)
-
-    return TestDataset(test_dir)
+    return LoadImg(test_dir)

@@ -11,25 +11,14 @@ def progress_bar(current, total, msg=None):
     if current == 0:
         BEGIN_T = time.time()  # Reset for new bar.
 
-    current_len = int(TOTAL_BAR_LENGTH * (current + 1) / total)
-    rest_len = int(TOTAL_BAR_LENGTH - current_len) - 1
-
-    sys.stdout.write(' %d/%d' % (current + 1, total))
-    sys.stdout.write(' [')
-    for i in range(current_len):
-        sys.stdout.write('=')
-    sys.stdout.write('>')
-    for i in range(rest_len):
-        sys.stdout.write('.')
-    sys.stdout.write(']')
+    sys.stdout.write('%d batches' % total)
 
     current_time = time.time()
-    step_time = current_time - LAST_T
     LAST_T = current_time
     total_time = current_time - BEGIN_T
 
-    time_used = '  Step: {:.3f}s'.format(step_time)
-    time_used += ' | Tot: {:.3f}s'.format(total_time)
+    time_used = ' '
+    time_used += 'Time: {:.3f}s'.format(total_time)
     if msg:
         time_used += ' | ' + msg
 

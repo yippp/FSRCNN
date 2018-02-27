@@ -17,9 +17,10 @@ from scipy.misc import imsave
 from torchviz import make_dot
 
 class solver(object):
-    def __init__(self, config, training_loader, testing5_loader, testing14_loader):
+    def __init__(self, config, train_loader, set5_h5_loader, set14_h5_loader, set5_img_loader, set14_img_loader):
         self.model = None
         self.lr = config.lr
+        self.batch_size = config.batch_size
         self.mom = config.mom
         self.logs = config.logs
         self.n_epochs = config.n_epochs
@@ -28,14 +29,17 @@ class solver(object):
         self.scheduler = None
         self.GPU = torch.cuda.is_available()
         self.seed = config.seed
-        self.training_loader = training_loader
-        self.testing5_loader = testing5_loader
-        self.testing14_loader = testing14_loader
+        self.train_loader = train_loader
+        self.set5_h5_loader = set5_h5_loader
+        self.set14_h5_loader = set14_h5_loader
+        self.set5_img_loader = set5_img_loader
+        self.set14_img_loader = set14_img_loader
         self.logger = Logger(self.logs + '/')
-        self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
+        self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0, 'PSNR for Set5 patch':0, 'PSNR for Set14 patch':0}
         self.final_para = []
         self.initial_para = []
         self.graph = True
+        self.to_tensor = ToTensor()
 
         if not os.path.isdir(self.logs):
             os.makedirs(self.logs)
@@ -46,7 +50,7 @@ class solver(object):
 
 
         self.criterion = nn.MSELoss()
-        # self.criterion = nn.SmoothL1Loss()# Huber loss
+        # self.criterion = nn.SmoothL1Loss() # Huber loss
         torch.manual_seed(self.seed)
 
         if self.GPU:
@@ -85,7 +89,7 @@ class solver(object):
     def train(self):
         self.model.train()
         train_loss = 0
-        for batch_num, (data, target) in enumerate(self.training_loader):
+        for batch_num, (data, target) in enumerate(self.train_loader):
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(target).cuda()
             else:
@@ -101,32 +105,14 @@ class solver(object):
             train_loss += loss.data[0]
             loss.backward()
             self.optimizer.step()
-            progress_bar(batch_num, len(self.training_loader), 'Loss: %.5f' % (train_loss / (batch_num + 1)))
+            progress_bar(batch_num, len(self.train_loader), 'Loss: %.5f' % (train_loss / (batch_num + 1)))
 
-        self.info['loss']= train_loss / len(self.training_loader)
+        self.info['loss']= train_loss / len(self.train_loader)
 
-    def test5(self):
+    def test_set5_patch(self):
         self.model.eval()
         avg_psnr = 0
-        for batch_num, (data, target) in enumerate(self.testing5_loader):
-            if self.GPU:
-                data, target = Variable(data).cuda(), Variable(target).cuda()
-            else:
-                data, target = Variable(data), Variable(target)
-
-            prediction = self.model(data)
-            mse = self.criterion(prediction, target)
-            # print(mse.data[0])
-            psnr = 10 * log10(1 / mse.data[0])
-            avg_psnr += psnr
-            progress_bar(batch_num, len(self.testing5_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
-
-        self.info['PSNR for Set5'] = avg_psnr / len(self.testing5_loader)
-
-    def test14(self):
-        self.model.eval()
-        avg_psnr = 0
-        for batch_num, (data, target) in enumerate(self.testing14_loader):
+        for batch_num, (data, target) in enumerate(self.set5_h5_loader):
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(target).cuda()
             else:
@@ -136,22 +122,90 @@ class solver(object):
             mse = self.criterion(prediction, target)
             psnr = 10 * log10(1 / mse.data[0])
             avg_psnr += psnr
-            progress_bar(batch_num, len(self.testing14_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
+            progress_bar(batch_num, len(self.set5_h5_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
 
-        self.info['PSNR for Set14'] = avg_psnr / len(self.testing14_loader)
+        self.info['PSNR for Set5 patch'] = avg_psnr / len(self.set5_h5_loader)
+
+    def test_set14_patch(self):
+        self.model.eval()
+        avg_psnr = 0
+        for batch_num, (data, target) in enumerate(self.set14_h5_loader):
+            if self.GPU:
+                data, target = Variable(data).cuda(), Variable(target).cuda()
+            else:
+                data, target = Variable(data), Variable(target)
+
+            prediction = self.model(data)
+            mse = self.criterion(prediction, target)
+            psnr = 10 * log10(1 / mse.data[0])
+            avg_psnr += psnr
+            progress_bar(batch_num, len(self.set14_h5_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
+
+        self.info['PSNR for Set14 patch'] = avg_psnr / len(self.set14_h5_loader)
+
+    def test_set5_img(self):
+        self.model.eval()
+        avg_psnr = 0
+        for batch_num, (data, target) in enumerate(self.set5_img_loader):
+            target = target.numpy()
+            target = target[:, :, 5:target.shape[2] - 6, 5:target.shape[3] - 6]
+            # target = Variable(torch.from_numpy(target))
+            if self.GPU:
+                data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
+            else:
+                data, target = Variable(data), Variable(torch.from_numpy(target))
+
+            prediction = self.model(data)
+            prediction = prediction.data.cpu().numpy()
+            prediction = prediction[:, :, 5:prediction.shape[2] - 6, 5:prediction.shape[3] - 6]
+            if self.GPU:
+                prediction = Variable(torch.from_numpy(prediction)).cuda()
+            else:
+                prediction = Variable(torch.from_numpy(prediction))
+            mse = self.criterion(prediction, target)
+            psnr = 10 * log10(1 / mse.data[0])
+            avg_psnr += psnr
+            progress_bar(batch_num, len(self.set5_img_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
+
+        self.info['PSNR for Set5'] = avg_psnr / len(self.set5_img_loader)
+
+    def test_set14_img(self):
+        self.model.eval()
+        avg_psnr = 0
+        for batch_num, (data, target) in enumerate(self.set14_img_loader):
+            target = target.numpy()
+            target = target[:, :, 5:target.shape[2] - 6, 5:target.shape[3] - 6]
+            # target = Variable(torch.from_numpy(target))
+            if self.GPU:
+                data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
+            else:
+                data, target = Variable(data), Variable(torch.from_numpy(target))
+
+            prediction = self.model(data)
+            prediction = prediction.data.cpu().numpy()
+            prediction = prediction[:, :, 5:prediction.shape[2] - 6, 5:prediction.shape[3] - 6]
+            if self.GPU:
+                prediction = Variable(torch.from_numpy(prediction)).cuda()
+            else:
+                prediction = Variable(torch.from_numpy(prediction))
+            mse = self.criterion(prediction, target)
+            psnr = 10 * log10(1 / mse.data[0])
+            avg_psnr += psnr
+            progress_bar(batch_num, len(self.set14_img_loader), 'PSNR: %.4fdB' % (avg_psnr / (batch_num + 1)))
+
+        self.info['PSNR for Set14'] = avg_psnr / len(self.set14_img_loader)
 
     def predict(self, epoch):
         self.model.eval()
         butterfly = load_img('./butterfly90.bmp')
-        to_tensor = ToTensor()
-        butterfly = torch.unsqueeze(to_tensor(butterfly), 0)
+        butterfly = torch.unsqueeze(self.to_tensor(butterfly), 0)
         if self.GPU:
             data = Variable(butterfly).cuda()
         else:
             data = Variable(butterfly)
         prediction = self.model(data).data.cpu().numpy()[0][0]
         self.logger.image_summary('prediction', prediction, epoch)
-        imsave(self.logs + '/prediction_' + str(epoch) + '.bmp', prediction)
+        # imsave(self.logs + '/prediction_' + str(epoch) + '.bmp', prediction)
 
     def plot_fig(self,  tensor, filename, num_cols=8):
         num_kernels = tensor.shape[0]
@@ -172,37 +226,48 @@ class solver(object):
         para = []
         for parameter in self.model.parameters():
             para.append(parameter.data.cpu().numpy())
-        # self.plot_fig(para[0], 'first_layer_' + stage)
-        # self.plot_fig(para[-2], 'last_layer_' + stage)
         return para
 
     def validate(self):
         self.build_model()
         self.initial_para = self.get_para()
         for epoch in range(1, self.n_epochs + 1):
-            if epoch == 1:
-                self.logger.histo_summary('fisrt layer para', self.initial_para[0], epoch)
-                self.logger.histo_summary('last layer para', self.initial_para[-2], epoch)
+            if epoch == 1: # log initial para
+                self.logger.histo_summary('initial fisrt layer para', self.initial_para[0], epoch)
+                self.logger.histo_summary('initial last layer para', self.initial_para[-2], epoch)
                 self.plot_fig(self.initial_para[0], 'first_layer_initial')
                 self.plot_fig(self.initial_para[-2], 'last_layer_initial')
+            elif (epoch % 5 == 0) or (epoch == self.n_epochs): # log para
+                self.logger.histo_summary('fisrt layer para', self.final_para[0] - self.initial_para[0], epoch)
+                self.logger.histo_summary('last layer para', self.final_para[-2] - self.initial_para[-2], epoch)
             print("\n===> Epoch {} starts:".format(epoch))
+
+            if (epoch % 10 ==0) and (self.train_loader.batch_size < self.batch_size):
+                self.train_loader.batch_size *= 2
+                self.train_loader.batch_sampler.batch_size *= 2
             self.train()
+
+            # print('Testing Set5 patch:')
+            # self.test_set5_patch()
+            # print('Testing Set14 patch:')
+            # self.test_set14_patch()
             print('Testing Set5:')
-            self.test5()
+            self.test_set5_img()
             print('Testing Set14:')
-            self.test14()
+            self.test_set14_img()
             # self.scheduler.step(epoch)
             self.final_para = self.get_para()
-            self.logger.histo_summary('fisrt layer para', self.final_para[0] - self.initial_para[0], epoch)
-            self.logger.histo_summary('last layer para', self.final_para[-2] - self.initial_para[-2], epoch)
+
             for tag, value in self.info.items():
                 self.logger.scalar_summary(tag, value, epoch)
 
-            if (epoch % 20 == 0) or (epoch == self.n_epochs):
-                self.save(epoch)
-                self.predict(epoch)
-                self.plot_fig(self.final_para[0] - self.initial_para[0], '/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], '/last_' + str(epoch))
-            elif epoch == 1:
-                self.plot_fig(self.final_para[0] - self.initial_para[0], '/first_' + str(epoch))
-                self.plot_fig(self.final_para[-2] - self.initial_para[-2], '/last_' + str(epoch))
+            self.predict(epoch)
+            if (epoch % 50 == 0) or (epoch == self.n_epochs) or (epoch == 1):
+                if epoch != 1:
+                    self.save(epoch)
+                # plot the para
+                self.plot_fig(self.final_para[0] - self.initial_para[0], '/first_diff_' + str(epoch))
+                self.plot_fig(self.final_para[-2] - self.initial_para[-2], '/last_diff_' + str(epoch))
+                self.plot_fig(self.final_para[0], '/first_' + str(epoch))
+                self.plot_fig(self.final_para[-2], '/last_' + str(epoch))
+

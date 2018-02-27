@@ -20,8 +20,8 @@ class Net(torch.nn.Module):
 
         # Non-linear Mapping
         for _ in range(m):
-            self.layers.append(nn.Conv2d(in_channels=s, out_channels=s, kernel_size=3, stride=1, padding=1))
-        self.layers.append(nn.PReLU())
+            self.layers.append(nn.Sequential(nn.Conv2d(in_channels=s, out_channels=s, kernel_size=3, stride=1, padding=1),
+                                         nn.PReLU()))
 
         # Expanding
         self.layers.append(nn.Sequential(nn.Conv2d(in_channels=s, out_channels=d, kernel_size=1, stride=1, padding=0),
@@ -30,7 +30,7 @@ class Net(torch.nn.Module):
         self.mid_part = torch.nn.Sequential(*self.layers)
 
         # Deconvolution
-        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=7, stride=3, padding=3, output_padding=0)
+        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=3, padding=4, output_padding=0)
         # H_out = (H_in-1)*stride-2*padding+kernal_size+out_padding
         #       = (H_in-1)*3+1
         #test input should be (y-5)*3+1
@@ -44,6 +44,7 @@ class Net(torch.nn.Module):
     def weight_init(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+                # m.weight.data.normal_(0.0, 0.2)
                 m.weight.data.normal_(0.0, sqrt(2/m.out_channels/m.kernel_size[0]/m.kernel_size[0])) # MSRA
                 # nn.init.xavier_normal(m.weight) # Xavier
                 if m.bias is not None:

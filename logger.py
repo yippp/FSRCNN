@@ -21,24 +21,23 @@ class Logger(object):
         self.writer.add_summary(summary, step)
         self.writer.flush()
 
-    def image_summary(self, tag, images, step):
+    def image_summary(self, tag, image, step):
         """Log a list of images."""
 
         img_summaries = []
-        for i, img in enumerate(images):
             # Write the image to a string
-            try:
-                s = StringIO()
-            except:
-                s = BytesIO()
-            scipy.misc.toimage(img).save(s, format="png")
+        try:
+            s = StringIO()
+        except:
+            s = BytesIO()
+        scipy.misc.toimage(image).save(s, format="png")
 
-            # Create an Image object
-            img_sum = tf.Summary.Image(encoded_image_string=s.getvalue(),
-                                       height=img.shape[0],
-                                       width=img.shape[1])
-            # Create a Summary value
-            img_summaries.append(tf.Summary.Value(tag='%s/%d' % (tag, i), image=img_sum))
+        # Create an Image object
+        img_sum = tf.Summary.Image(encoded_image_string=s.getvalue(),
+                                   height=image.shape[0],
+                                   width=image.shape[1])
+        # Create a Summary value
+        img_summaries.append(tf.Summary.Value(tag='%s' % tag, image=img_sum))
 
         # Create and write Summary
         summary = tf.Summary(value=img_summaries)
@@ -72,27 +71,3 @@ class Logger(object):
         summary = tf.Summary(value=[tf.Summary.Value(tag=tag, histo=hist)])
         self.writer.add_summary(summary, step)
         self.writer.flush()
-
-# # Usage:
-# # (1) Log the scalar values
-# info = {
-#     'loss': loss.data[0],
-#     'accuracy': accuracy.data[0]
-# }
-#
-# for tag, value in info.items():
-#     logger.scalar_summary(tag, value, step)
-#
-# # (2) Log values and gradients of the parameters (histogram)
-# for tag, value in model.named_parameters():
-#     tag = tag.replace('.', '/')
-#     logger.histo_summary(tag, to_np(value), step)
-#     logger.histo_summary(tag+'/grad', to_np(value.grad), step)
-#
-# # (3) Log the images
-# info = {
-#     'images': to_np(img.view(-1, 28, 28)[:10])
-# }
-#
-# for tag, images in info.items():
-#     logger.image_summary(tag, images, step)
