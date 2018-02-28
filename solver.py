@@ -46,9 +46,9 @@ class solver(object):
             os.makedirs(self.logs)
 
     def build_model(self):
-        self.model = Net(n_channels=1)
-        self.model.weight_init()
-
+        # self.model = Net(n_channels=1)
+        # self.model.weight_init()
+        self.model = torch.load('./logs/no56/N2-10-4/FSRCNN_model100.pth')
 
         self.criterion = nn.MSELoss()
         # self.criterion = HuberLoss(delta=0.9) # Huber loss
@@ -71,10 +71,10 @@ class solver(object):
                                     {'params': self.model.mid_part[2][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[3][0].weight},
                                     {'params': self.model.mid_part[3][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[4][0].weight},
-                                    {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[5][0].weight},  # expanding
-                                    {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
+                                    # {'params': self.model.mid_part[4][0].weight},
+                                    # {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
+                                    # {'params': self.model.mid_part[5][0].weight},  # expanding
+                                    # {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
                                     {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
@@ -232,6 +232,7 @@ class solver(object):
 
     def validate(self):
         self.build_model()
+
         self.initial_para = self.get_para()
         for epoch in range(1, self.n_epochs + 1):
             if epoch == 1: # log initial para
