@@ -62,7 +62,7 @@ class LoadImg(data.Dataset):
         target = input_image.copy()
         target = self.to_tensor(target)
 
-        self.resize = Resize((x_re, y_re))
+        self.resize = Resize((x_re - 4, y_re - 4))
         input_image = self.resize(input_image)
         input_image = self.to_tensor(input_image)
 

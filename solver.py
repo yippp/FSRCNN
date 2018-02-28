@@ -14,7 +14,7 @@ from dataset.dataset import load_img
 from torchvision.transforms import ToTensor
 from scipy.misc import imsave
 from torchviz import make_dot
-from loss import HuberLoss
+from loss import HuberLoss, CharbonnierLoss
 
 class solver(object):
     def __init__(self, config, train_loader, set5_h5_loader, set14_h5_loader, set5_img_loader, set14_img_loader):
@@ -51,7 +51,8 @@ class solver(object):
 
 
         # self.criterion = nn.MSELoss()
-        self.criterion = HuberLoss(delta=.9) # Huber loss
+        # self.criterion = HuberLoss(delta=0.9) # Huber loss
+        self.criterion = CharbonnierLoss(delta=0.001) # Charbonnier Loss
         torch.manual_seed(self.seed)
 
         if self.GPU:
@@ -149,7 +150,7 @@ class solver(object):
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set5_img_loader):
             target = target.numpy()
-            target = target[:, :, 5:target.shape[2] - 6, 5:target.shape[3] - 6]
+            target = target[:, :, 6:target.shape[2] - 6, 6:target.shape[3] - 6]
             # target = Variable(torch.from_numpy(target))
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
@@ -158,7 +159,7 @@ class solver(object):
 
             prediction = self.model(data)
             prediction = prediction.data.cpu().numpy()
-            prediction = prediction[:, :, 5:prediction.shape[2] - 6, 5:prediction.shape[3] - 6]
+            # prediction = prediction[:, :, 6:prediction.shape[2] - 6, 6:prediction.shape[3] - 6]
             if self.GPU:
                 prediction = Variable(torch.from_numpy(prediction)).cuda()
             else:
@@ -175,7 +176,7 @@ class solver(object):
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set14_img_loader):
             target = target.numpy()
-            target = target[:, :, 5:target.shape[2] - 6, 5:target.shape[3] - 6]
+            target = target[:, :, 6:target.shape[2] - 6, 6:target.shape[3] - 6]
             # target = Variable(torch.from_numpy(target))
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
@@ -184,7 +185,7 @@ class solver(object):
 
             prediction = self.model(data)
             prediction = prediction.data.cpu().numpy()
-            prediction = prediction[:, :, 5:prediction.shape[2] - 6, 5:prediction.shape[3] - 6]
+            # prediction = prediction[:, :, 6:prediction.shape[2] - 6, 6:prediction.shape[3] - 6]
             if self.GPU:
                 prediction = Variable(torch.from_numpy(prediction)).cuda()
             else:
@@ -198,7 +199,7 @@ class solver(object):
 
     def predict(self, epoch):
         self.model.eval()
-        butterfly = load_img('./butterfly90.bmp')
+        butterfly = load_img('./butterfly86.bmp')
         butterfly = torch.unsqueeze(self.to_tensor(butterfly), 0)
         if self.GPU:
             data = Variable(butterfly).cuda()
