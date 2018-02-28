@@ -13,8 +13,8 @@ from matplotlib.colors import Normalize
 from dataset.dataset import load_img
 from torchvision.transforms import ToTensor
 from scipy.misc import imsave
-
 from torchviz import make_dot
+from loss import HuberLoss
 
 class solver(object):
     def __init__(self, config, train_loader, set5_h5_loader, set14_h5_loader, set5_img_loader, set14_img_loader):
@@ -35,7 +35,8 @@ class solver(object):
         self.set5_img_loader = set5_img_loader
         self.set14_img_loader = set14_img_loader
         self.logger = Logger(self.logs + '/')
-        self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0, 'PSNR for Set5 patch':0, 'PSNR for Set14 patch':0}
+        self.info = {'loss':0, 'PSNR for Set5':0, 'PSNR for Set14':0}
+        # 'PSNR for Set5 patch':0, 'PSNR for Set14 patch':0
         self.final_para = []
         self.initial_para = []
         self.graph = True
@@ -49,8 +50,8 @@ class solver(object):
         self.model.weight_init()
 
 
-        self.criterion = nn.MSELoss()
-        # self.criterion = nn.SmoothL1Loss() # Huber loss
+        # self.criterion = nn.MSELoss()
+        self.criterion = HuberLoss(delta=.9) # Huber loss
         torch.manual_seed(self.seed)
 
         if self.GPU:
@@ -69,10 +70,10 @@ class solver(object):
                                     {'params': self.model.mid_part[2][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[3][0].weight},
                                     {'params': self.model.mid_part[3][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[4][0].weight},
-                                    {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[5][0].weight},  # expanding
-                                    {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
+                                    # {'params': self.model.mid_part[4][0].weight},
+                                    # {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
+                                    # {'params': self.model.mid_part[5][0].weight},  # expanding
+                                    # {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
                                     {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
@@ -242,10 +243,11 @@ class solver(object):
                 self.logger.histo_summary('last layer para', self.final_para[-2] - self.initial_para[-2], epoch)
             print("\n===> Epoch {} starts:".format(epoch))
 
-            if (epoch % 10 ==0) and (self.train_loader.batch_size < self.batch_size):
+            self.train()
+
+            if (epoch % 2 ==0) and (self.train_loader.batch_size < self.batch_size):
                 self.train_loader.batch_size *= 2
                 self.train_loader.batch_sampler.batch_size *= 2
-            self.train()
 
             # print('Testing Set5 patch:')
             # self.test_set5_patch()
