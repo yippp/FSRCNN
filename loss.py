@@ -15,10 +15,8 @@ class HuberLoss(nn.Module):
 class CharbonnierLoss(nn.Module):
     def __init__(self, delta=1e-3):
         super(CharbonnierLoss, self).__init__()
-        # self.MSELoss = nn.MSELoss ()
         self.delta = delta
         return
 
     def forward(self, input, target):
-        # return torch.sqrt(self.MSELoss(input, target) + self.delta * self.delta)
         return mean(sqrt(pow((input - target), 2) + self.delta * self.delta))

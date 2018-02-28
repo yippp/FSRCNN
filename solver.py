@@ -50,9 +50,9 @@ class solver(object):
         self.model.weight_init()
 
 
-        # self.criterion = nn.MSELoss()
+        self.criterion = nn.MSELoss()
         # self.criterion = HuberLoss(delta=0.9) # Huber loss
-        self.criterion = CharbonnierLoss(delta=0.001) # Charbonnier Loss
+        # self.criterion = CharbonnierLoss(delta=0.0001) # Charbonnier Loss
         torch.manual_seed(self.seed)
 
         if self.GPU:
@@ -71,10 +71,10 @@ class solver(object):
                                     {'params': self.model.mid_part[2][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[3][0].weight},
                                     {'params': self.model.mid_part[3][0].bias, 'lr': 0.1 * self.lr},
-                                    # {'params': self.model.mid_part[4][0].weight},
-                                    # {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
-                                    # {'params': self.model.mid_part[5][0].weight},  # expanding
-                                    # {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[4][0].weight},
+                                    {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[5][0].weight},  # expanding
+                                    {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
                                     {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
