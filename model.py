@@ -13,6 +13,7 @@ class Net(torch.nn.Module):
                                         nn.PReLU())
         # H_out = floor((H_in+2*padding-(kernal_size-1)-1)/stride+1)
         #       = floor(H_in-4)
+        # for x2  floor(H_in-2)
         self.layers = []
         # Shrinking
         # self.layers.append(nn.Sequential(nn.Conv2d(in_channels=d, out_channels=s, kernel_size=1, stride=1, padding=0),
@@ -30,10 +31,11 @@ class Net(torch.nn.Module):
         self.mid_part = torch.nn.Sequential(*self.layers)
 
         # Deconvolution
-        self.last_part = nn.ConvTranspose2d(in_channels=s, out_channels=n_channels, kernel_size=7, stride=3, padding=6, output_padding=0)
+        self.last_part = nn.ConvTranspose2d(in_channels=s, out_channels=n_channels, kernel_size=7, stride=2, padding=2, output_padding=0)
         # H_out = (H_in-1)*stride-2*padding+kernal_size+out_padding
         #       = (H_in-1)*3+1
         #test input should be (y-5)*3+1
+        # for x2 2x-3
 
     def forward(self, x):
         out = self.first_part(x)

@@ -46,9 +46,9 @@ class solver(object):
             os.makedirs(self.logs)
 
     def build_model(self):
-        # self.model = Net(n_channels=1)
-        # self.model.weight_init()
-        self.model = torch.load('./logs/no56/N2-10-4/FSRCNN_model100.pth')
+        self.model = Net(n_channels=1)
+        self.model.weight_init()
+        # self.model = torch.load('./logs/no7/x2/FSRCNN_model100.pth')
 
         self.criterion = nn.MSELoss()
         # self.criterion = HuberLoss(delta=0.9) # Huber loss
@@ -150,7 +150,7 @@ class solver(object):
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set5_img_loader):
             target = target.numpy()
-            target = target[:, :, 6:target.shape[2] - 6, 6:target.shape[3] - 6]
+            target = target[:, :, 4:target.shape[2] - 4, 4:target.shape[3] - 4]
             # target = Variable(torch.from_numpy(target))
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
@@ -176,7 +176,7 @@ class solver(object):
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set14_img_loader):
             target = target.numpy()
-            target = target[:, :, 6:target.shape[2] - 6, 6:target.shape[3] - 6]
+            target = target[:, :, 4:target.shape[2] - 4, 4:target.shape[3] - 4]
             # target = Variable(torch.from_numpy(target))
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
@@ -199,7 +199,7 @@ class solver(object):
 
     def predict(self, epoch):
         self.model.eval()
-        butterfly = load_img('./butterfly86.bmp')
+        butterfly = load_img('./butterfly127.bmp')
         butterfly = torch.unsqueeze(self.to_tensor(butterfly), 0)
         if self.GPU:
             data = Variable(butterfly).cuda()
