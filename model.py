@@ -36,6 +36,7 @@ class Net(torch.nn.Module):
         #       = (H_in-1)*3+1
         #test input should be (y-5)*3+1
         # for x2 2x-3
+        # for x4 4x-25
 
     def forward(self, x):
         out = self.first_part(x)

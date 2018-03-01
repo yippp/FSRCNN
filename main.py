@@ -11,7 +11,7 @@ parser.add_argument('--lr', type=float, default=1e-2,  help='Learning Rate. Defa
 parser.add_argument('--mom', type=float, default=0.9, help='Momentum. Default=0.9')
 parser.add_argument('--seed', type=int, default=1, help='random seed to use. Default=1')
 parser.add_argument('--train_set', type=str, default='train/91.h5', help='name of train set h5 file.')
-parser.add_argument('--logs', type=str, default='./logs/no/x2/',
+parser.add_argument('--logs', type=str, default='./logs/no/x2',
                     help='folder to save the log file. Default=./logs/')
 
 args = parser.parse_args()
@@ -23,7 +23,7 @@ def main():
     set14_h5 = get_h5_set('test/Set14.h5')
     set5_img = get_img_set('test/Set5')
     set14_img = get_img_set('test/Set14')
-    training_data_loader = DataLoader(dataset=train_set, batch_size=1, shuffle=True)
+    training_data_loader = DataLoader(dataset=train_set, batch_size=128, shuffle=True)
     Set5_h5_loader = DataLoader(dataset=set5_h5, batch_size=1, shuffle=False)
     Set14_h5_loader = DataLoader(dataset=set14_h5, batch_size=1, shuffle=False)
     Set5_img_loader = DataLoader(dataset=set5_img, batch_size=1, shuffle=False)
