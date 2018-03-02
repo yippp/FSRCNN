@@ -48,12 +48,12 @@ class LoadImg(data.Dataset):
 
     def __getitem__(self, index):
         input_image = load_img(self.image_filenames[index])
-        x_re = floor((input_image.size[0] + 3) / 2)
-        x = 2 * x_re - 3
+        x_re = floor((input_image.size[0] / 2) + 3)
+        x = (x_re - 3) * 2
         if x != input_image.size[0]:
             x = floor(x)
-        y_re = floor((input_image.size[1] + 3) / 2)
-        y = 2 * y_re - 3
+        y_re = floor((input_image.size[0] / 2) + 3)
+        y = (y_re - 3) * 2
         if y != input_image.size[1]:
             y = floor(y)
 
@@ -62,7 +62,7 @@ class LoadImg(data.Dataset):
         target = input_image.copy()
         target = self.to_tensor(target)
 
-        self.resize = Resize((x_re - 4, y_re - 4))
+        self.resize = Resize((x_re - 7, y_re - 7))
         input_image = self.resize(input_image)
         input_image = self.to_tensor(input_image)
 

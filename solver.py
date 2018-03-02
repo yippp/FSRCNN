@@ -71,12 +71,12 @@ class solver(object):
                                     {'params': self.model.mid_part[2][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[3][0].weight},
                                     {'params': self.model.mid_part[3][0].bias, 'lr': 0.1 * self.lr},
-                                    # {'params': self.model.mid_part[4][0].weight},
-                                    # {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
-                                    # {'params': self.model.mid_part[5][0].weight},  # expanding
-                                    # {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
-                                    {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
+                                    {'params': self.model.mid_part[4][0].weight},
+                                    {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.mid_part[5][0].weight},  # expanding
+                                    {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
+                                    {'params': self.model.last_part[0].weight, 'lr': 0.1 * self.lr}, # deconvolution
+                                    {'params': self.model.last_part[0].bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
         # self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
         # self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)
@@ -150,7 +150,7 @@ class solver(object):
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set5_img_loader):
             target = target.numpy()
-            target = target[:, :, 4:target.shape[2] - 4, 4:target.shape[3] - 4]
+            target = target[:, :, 6:target.shape[2] - 6, 6:target.shape[3] - 6]
             # target = Variable(torch.from_numpy(target))
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
@@ -176,7 +176,7 @@ class solver(object):
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set14_img_loader):
             target = target.numpy()
-            target = target[:, :, 4:target.shape[2] - 4, 4:target.shape[3] - 4]
+            target = target[:, :, 6:target.shape[2] - 6, 6:target.shape[3] - 6]
             # target = Variable(torch.from_numpy(target))
             if self.GPU:
                 data, target = Variable(data).cuda(), Variable(torch.from_numpy(target)).cuda()
@@ -199,7 +199,7 @@ class solver(object):
 
     def predict(self, epoch):
         self.model.eval()
-        butterfly = load_img('./butterfly127.bmp')
+        butterfly = load_img('./butterfly120.bmp')
         butterfly = torch.unsqueeze(self.to_tensor(butterfly), 0)
         if self.GPU:
             data = Variable(butterfly).cuda()
