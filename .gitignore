@@ -99,6 +99,6 @@ ENV/
 .mypy_cache/
 *.xml
 *.iml
-*.jpg
-*.bmp
 *.pth
+
+*.yip-PC

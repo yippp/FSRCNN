@@ -75,8 +75,8 @@ class solver(object):
                                     {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[5][0].weight},  # expanding
                                     {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.last_part[0].weight, 'lr': 0.1 * self.lr}, # deconvolution
-                                    {'params': self.model.last_part[0].bias, 'lr': 0.1 * self.lr}],
+                                    {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
+                                    {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
         # self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
         # self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 75, 100], gamma=0.5)

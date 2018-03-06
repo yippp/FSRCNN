@@ -31,9 +31,9 @@ class Net(torch.nn.Module):
         self.mid_part = torch.nn.Sequential(*self.layers)
 
         # Deconvolution
-        # self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=3, padding=4, output_padding=0)
-        self.last_part = nn.Sequential(nn.Conv2d(in_channels=d, out_channels=n_channels * 2 * 2, kernel_size=3, stride=1, padding=1),
-                                       nn.PixelShuffle(2))
+        self.last_part = nn.ConvTranspose2d(in_channels=d, out_channels=n_channels, kernel_size=9, stride=3, padding=4, output_padding=0)
+        # self.last_part = nn.Sequential(nn.Conv2d(in_channels=d, out_channels=n_channels * 2 * 2, kernel_size=3, stride=1, padding=1),
+        #                                nn.PixelShuffle(2))
         # H_out = (H_in-1)*stride-2*padding+kernal_size+out_padding
         #       = (H_in-1)*3+1
         #test input should be (y-5)*3+1

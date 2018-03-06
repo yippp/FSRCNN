@@ -10,8 +10,8 @@ parser.add_argument('--n_epochs', type=int, default=100, help='number of epochs 
 parser.add_argument('--lr', type=float, default=1e-3,  help='Learning Rate. Default=0.001')
 parser.add_argument('--mom', type=float, default=0.9, help='Momentum. Default=0.9')
 parser.add_argument('--seed', type=int, default=1, help='random seed to use. Default=1')
-parser.add_argument('--train_set', type=str, default='train/91_12.h5', help='name of train set h5 file.')
-parser.add_argument('--logs', type=str, default='./logs/no8',
+parser.add_argument('--train_set', type=str, default='train/91.h5', help='name of train set h5 file.')
+parser.add_argument('--logs', type=str, default='./logs/',
                     help='folder to save the log file. Default=./logs/')
 
 args = parser.parse_args()
