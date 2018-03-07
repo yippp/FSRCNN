@@ -47,6 +47,10 @@ class Net(torch.nn.Module):
         return out
 
     def weight_init(self):
+        '''
+        Initial the weights.
+        :return:
+        '''
         for m in self.modules():
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
                 # m.weight.data.normal_(0.0, 0.2)

@@ -1,6 +1,8 @@
 from PIL import Image
 from dataset.dataset import load_img
-
+'''
+Crop the butterfly image for prediction during training.
+'''
 img = load_img('./dataset/test/Set5/butterfly_GT.bmp')
 # y90 = img.resize((90, 90), resample=Image.BICUBIC)
 # y90.save('butterfly90.bmp')

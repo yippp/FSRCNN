@@ -46,6 +46,10 @@ class solver(object):
             os.makedirs(self.logs)
 
     def build_model(self):
+        '''
+        Build the model.
+        :return:
+        '''
         self.model = Net(n_channels=1)
         self.model.weight_init()
         # self.model = torch.load('./logs/no7/x2/FSRCNN_model100.pth')
@@ -61,11 +65,11 @@ class solver(object):
             cudnn.benchmark = True
             self.criterion.cuda()
 
-        self.optimizer = optim.SGD([{'params': self.model.first_part[0].weight}, # ffeature extraction
+        self.optimizer = optim.SGD([{'params': self.model.first_part[0].weight}, # feature extraction layer
                                     {'params': self.model.first_part[0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[0][0].weight}, # shrinking
+                                    {'params': self.model.mid_part[0][0].weight}, # shrinking layer
                                     {'params': self.model.mid_part[0][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[1][0].weight}, # mapping
+                                    {'params': self.model.mid_part[1][0].weight}, # mapping layers
                                     {'params': self.model.mid_part[1][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[2][0].weight},
                                     {'params': self.model.mid_part[2][0].bias, 'lr': 0.1 * self.lr},
@@ -73,9 +77,9 @@ class solver(object):
                                     {'params': self.model.mid_part[3][0].bias, 'lr': 0.1 * self.lr},
                                     {'params': self.model.mid_part[4][0].weight},
                                     {'params': self.model.mid_part[4][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.mid_part[5][0].weight},  # expanding
+                                    {'params': self.model.mid_part[5][0].weight},  # expanding layer
                                     {'params': self.model.mid_part[5][0].bias, 'lr': 0.1 * self.lr},
-                                    {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution
+                                    {'params': self.model.last_part.weight, 'lr': 0.1 * self.lr}, # deconvolution layer
                                     {'params': self.model.last_part.bias, 'lr': 0.1 * self.lr}],
                                     lr=self.lr, momentum=self.mom)
         # self.optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.mom)
@@ -84,11 +88,20 @@ class solver(object):
         print(self.model)
 
     def save(self, epoch):
+        '''
+        Save model.
+        :param epoch: number of current epoch
+        :return:
+        '''
         model_out_path = self.logs + '/FSRCNN_model' + str(epoch) + '.pth'
         torch.save(self.model, model_out_path)
         print("Checkpoint saved to {}".format(model_out_path))
 
     def train(self):
+        '''
+        The main traning function.
+        :return:
+        '''
         self.model.train()
         train_loss = 0
         for batch_num, (data, target) in enumerate(self.train_loader):
@@ -128,6 +141,7 @@ class solver(object):
 
         self.info['PSNR for Set5 patch'] = avg_psnr / len(self.set5_h5_loader)
 
+
     def test_set14_patch(self):
         self.model.eval()
         avg_psnr = 0
@@ -145,7 +159,12 @@ class solver(object):
 
         self.info['PSNR for Set14 patch'] = avg_psnr / len(self.set14_h5_loader)
 
+
     def test_set5_img(self):
+        '''
+        Get PSNR value for test set Set 5 images, and write to Tensorboards logs.
+        :return:
+        '''
         self.model.eval()
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set5_img_loader):
@@ -171,7 +190,12 @@ class solver(object):
 
         self.info['PSNR for Set5'] = avg_psnr / len(self.set5_img_loader)
 
+
     def test_set14_img(self):
+        '''
+        Get PSNR value for test set Set 14 images, and write to Tensorboards logs.
+        :return:
+        '''
         self.model.eval()
         avg_psnr = 0
         for batch_num, (data, target) in enumerate(self.set14_img_loader):
@@ -197,9 +221,15 @@ class solver(object):
 
         self.info['PSNR for Set14'] = avg_psnr / len(self.set14_img_loader)
 
+
     def predict(self, epoch):
+        '''
+        Get the prediction result and write to Tensorboard logs.
+        :param epoch: the current epoch number
+        :return:
+        '''
         self.model.eval()
-        butterfly = load_img('./butterfly120.bmp')
+        butterfly = load_img('./butterfly86.bmp')
         butterfly = torch.unsqueeze(self.to_tensor(butterfly), 0)
         if self.GPU:
             data = Variable(butterfly).cuda()
@@ -209,7 +239,15 @@ class solver(object):
         self.logger.image_summary('prediction', prediction, epoch)
         # imsave(self.logs + '/prediction_' + str(epoch) + '.bmp', prediction)
 
+
     def plot_fig(self,  tensor, filename, num_cols=8):
+        '''
+        Plot the parameters to images.
+        :param tensor: the tensor need to plot
+        :param filename: the filename of the saved images
+        :param num_cols: number of columns of filters in the images
+        :return:
+        '''
         num_kernels = tensor.shape[0]
         num_rows = ceil(num_kernels / num_cols)
         fig = plt.figure(figsize=(num_cols, num_rows))
@@ -224,13 +262,23 @@ class solver(object):
         plt.savefig(self.logs + '/' + filename + '.png')
         # plt.show()
 
+
     def get_para(self):
+        '''
+        Return the pamameters in the model.
+        :return:
+        '''
         para = []
         for parameter in self.model.parameters():
             para.append(parameter.data.cpu().numpy())
         return para
 
+
     def validate(self):
+        '''
+        Main function to run solver.
+        :return: :return:
+        '''
         self.build_model()
 
         self.initial_para = self.get_para()
