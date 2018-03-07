@@ -116,15 +116,17 @@ The blue line is the data trained on 91-images-residual.
 
 Use 91-images training dataset.
 
-| Guassian variance                | MSRA                                                         | $\text{Xavier}(\sqrt{2/\text{filter number}/\text{filter size}^2})$ |
+Xavier : $$\text{Xavier}(\sqrt{2/\text{filter number}/\text{filter size}^2})$$
+
+| Guassian variance                | MSRA                                                         | Xavier |
 | -------------------------------- | :----------------------------------------------------------- | ------------------------------------------------------------ |
 | PSNR(dB) for Set 5               | 24.27                                                        | 22.56                                                        |
 | PSNR(dB) for Set 14              | 22.88                                                        | 21.38                                                        |
-| First layer filter initilization | ![img](file://./logs/no123/sqrtd91/first_layer_initial.png) | ![img](file://./logs/no123/sqrtd91-xavier/first_layer_initial.png) |
-| First layer filter after trained | ![img](file://./logs/no123/sqrtd91/first_100.png) | ![img](file://./logs/no123/sqrtd91-xavier/first_100.png) |
-| Last layer filter initilization  | ![img](file://./logs/no123/sqrtd91/last_layer_initial.png) | ![img](file://./logs/no123/sqrtd91-xavier/last_layer_initial.png) |
-| Last layer filter after trained  | ![img](file://./logs/no123/sqrtd91/last_100.png) | ![img](file://./logs/no123/sqrtd91-xavier/last_100.png) |
-| Result                           | ![img](file://./logs/no123/sqrtd91/individualImage.png) | ![img](file://./logs/no123/sqrtd91-xavier/individualImage.png) |
+| First layer filter initilization | ![img](./logs/no123/sqrtd91/first_layer_initial.png) | ![img](./logs/no123/sqrtd91-xavier/first_layer_initial.png) |
+| First layer filter after trained | ![img](./logs/no123/sqrtd91/first_100.png) | ![img](./logs/no123/sqrtd91-xavier/first_100.png) |
+| Last layer filter initilization  | ![img](./logs/no123/sqrtd91/last_layer_initial.png) | ![img](./logs/no123/sqrtd91-xavier/last_layer_initial.png) |
+| Last layer filter after trained  | ![img](./logs/no123/sqrtd91/last_100.png) | ![img](./logs/no123/sqrtd91-xavier/last_100.png) |
+| Result                           | ![img](./logs/no123/sqrtd91/individualImage.png) | ![img](./logs/no123/sqrtd91-xavier/individualImage.png) |
 
 #### Phenomenon
 
@@ -148,11 +150,11 @@ The cyan line is the data from model use Xavier.
 | -------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | PSNR(dB) for Set 5               | 27.67                                                        | 26.73                                                        |
 | PSNR(dB) for Set 14              | 25.36                                                        | 24.62                                                        |
-| First layer filter initilization | ![img](file://./logs/no123/sqrtd191-res/first_layer_initial.png) | ![img](file://./logs/no123/sqrtd91-res/first_layer_initial.png) |
-| First layer filter after trained | ![img](file://./logs/no123/sqrtd191-res/first_100.png) | ![img](file://./logs/no123/sqrtd91-res/first_100.png) |
-| Last layer filter initilization  | ![img](file://./logs/no123/sqrtd191-res/last_layer_initial.png) | ![img](file://./logs/no123/sqrtd91-res/last_layer_initial.png) |
-| Last layer filter after trained  | ![img](file://./logs/no123/sqrtd191-res/last_100.png) | ![img](file://./logs/no123/sqrtd91-res/last_100.png) |
-| Result                           | ![img](file://./logs/no123/sqrtd191-res/individualImage.png) | ![img](file://./logs/no123/sqrtd91-res/individualImage.png) |
+| First layer filter initilization | ![img](./logs/no123/sqrtd191-res/first_layer_initial.png) | ![img](./logs/no123/sqrtd91-res/first_layer_initial.png) |
+| First layer filter after trained | ![img](./logs/no123/sqrtd191-res/first_100.png) | ![img](./logs/no123/sqrtd91-res/first_100.png) |
+| Last layer filter initilization  | ![img](./logs/no123/sqrtd191-res/last_layer_initial.png) | ![img](./logs/no123/sqrtd91-res/last_layer_initial.png) |
+| Last layer filter after trained  | ![img](./logs/no123/sqrtd191-res/last_100.png) | ![img](./logs/no123/sqrtd91-res/last_100.png) |
+| Result                           | ![img](./logs/no123/sqrtd191-res/individualImage.png) | ![img](./logs/no123/sqrtd91-res/individualImage.png) |
 
 #### Iteration
 
@@ -180,7 +182,7 @@ The base learning rate is set to 0.01. Use 91-images-residual as trainning data.
 
 | Loss function        | Huber   | Huber | Huber | Charbonnier | Charbonnier | Charbonnier | L2    |
 | -------------------- | ------- | ----- | ----- | ----------- | ----------- | ----------- | ----- |
-| $\delta$             | 0.00001 | 0.6   | 0.9   | 0.01        | 0.001       | 0.0001      | /     |
+| Delta          | 0.00001 | 0.6   | 0.9   | 0.01        | 0.001       | 0.0001      | /     |
 | PSNR for Set 5 (dB)  | 54.23*  | 30.83 | 30.80 | 5.538       | 7.334       | 6.182       | 27.91 |
 | PSNR for Set 14 (dB) | 54.12*  | 28.46 | 28.42 | 4.406       | 4.979       | 5.125       | 25.54 |
 
@@ -193,7 +195,7 @@ The orange line shows the data from the modal with Huber loss and $\delta=0.6$.
 The borwn line shows the data from the modal with Huber loss and $\delta=0.9$.
 
 The cyan line shows the data from the modal with L2 loss.
-
+S
 The magenta line shows the data from the modal with Charbonnier loss and $\delta=0.01​$.
 
 The green line shows the data from the modal with Charbonnier loss and $\delta=0.001$.
