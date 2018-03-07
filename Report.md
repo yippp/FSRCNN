@@ -116,9 +116,7 @@ The blue line is the data trained on 91-images-residual.
 
 Use 91-images training dataset.
 
-Xavier : $$\text{Xavier}(\sqrt{2/\text{filter number}/\text{filter size}^2})$$
-
-| Guassian variance                | MSRA                                                         | Xavier |
+| Guassian variance                | MSRA                                                         | $\text{Xavier}(\sqrt{2/\text{filter number}/\text{filter size}^2})$ |
 | -------------------------------- | :----------------------------------------------------------- | ------------------------------------------------------------ |
 | PSNR(dB) for Set 5               | 24.27                                                        | 22.56                                                        |
 | PSNR(dB) for Set 14              | 22.88                                                        | 21.38                                                        |
@@ -182,7 +180,7 @@ The base learning rate is set to 0.01. Use 91-images-residual as trainning data.
 
 | Loss function        | Huber   | Huber | Huber | Charbonnier | Charbonnier | Charbonnier | L2    |
 | -------------------- | ------- | ----- | ----- | ----------- | ----------- | ----------- | ----- |
-| Delta          | 0.00001 | 0.6   | 0.9   | 0.01        | 0.001       | 0.0001      | /     |
+| $\delta$             | 0.00001 | 0.6   | 0.9   | 0.01        | 0.001       | 0.0001      | /     |
 | PSNR for Set 5 (dB)  | 54.23*  | 30.83 | 30.80 | 5.538       | 7.334       | 6.182       | 27.91 |
 | PSNR for Set 14 (dB) | 54.12*  | 28.46 | 28.42 | 4.406       | 4.979       | 5.125       | 25.54 |
 
@@ -195,7 +193,7 @@ The orange line shows the data from the modal with Huber loss and $\delta=0.6$.
 The borwn line shows the data from the modal with Huber loss and $\delta=0.9$.
 
 The cyan line shows the data from the modal with L2 loss.
-S
+
 The magenta line shows the data from the modal with Charbonnier loss and $\delta=0.01​$.
 
 The green line shows the data from the modal with Charbonnier loss and $\delta=0.001$.
