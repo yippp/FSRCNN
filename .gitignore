@@ -102,3 +102,12 @@ ENV/
 *.pth
 
 *.yip-PC
+*.bmp
+*.h5
+*.CR2
+*.dng
+*.xmp
+*.JPG
+dataset/real_raw/.DS_Store
+dataset/.DS_Store
+.DS_Store
