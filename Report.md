@@ -98,7 +98,7 @@ For all images during testing, cut edges pixel according to the padding paramete
 
 | Ground truth                                      | Bicubic upsampling image                           |
 | ------------------------------------------------- | -------------------------------------------------- |
-| ![butterfly](./butterfly.bmp) | ![bicubic](./logs/bicubic.bmp) |
+| ![butterfly](./bmp/butterfly.bmp) | ![bicubic](./logs/bicubic.bmp) |
 
 #### Iteration
 

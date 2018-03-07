@@ -229,7 +229,7 @@ class solver(object):
         :return:
         '''
         self.model.eval()
-        butterfly = load_img('./butterfly86.bmp')
+        butterfly = load_img('./bmp/butterfly86.bmp')
         butterfly = torch.unsqueeze(self.to_tensor(butterfly), 0)
         if self.GPU:
             data = Variable(butterfly).cuda()

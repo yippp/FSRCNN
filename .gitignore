@@ -102,7 +102,6 @@ ENV/
 *.pth
 
 *.yip-PC
-*.bmp
 *.h5
 *.CR2
 *.dng
