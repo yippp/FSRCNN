@@ -1,7 +1,7 @@
 clear; 
 %% To do data augmentation
-folder = '91-images';
-savepath = '91-images-aug/';
+folder = 'train/91-images';
+savepath = 'train/91-images-aug/';
 
 filepaths = dir(fullfile(folder,'*.bmp'));
      

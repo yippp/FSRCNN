@@ -1,9 +1,9 @@
 clear; close all;
 %% settings
-folder = 'Set5';
-savepath = 'Set5_12.h5';
-size_input = 12;
-size_label = 20;
+folder = 'test/Set5'; %% Set14
+savepath = 'test/Set5.h5';
+size_input = 11;
+size_label = 19;
 scale = 3;
 stride = size_input;
 

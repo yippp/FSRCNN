@@ -26,4 +26,3 @@ def progress_bar(current, total, msg=None):
         sys.stdout.write(msg)
         sys.stdout.write('\n')
         sys.stdout.flush()
-

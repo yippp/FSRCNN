@@ -1,3 +1,4 @@
+# Code referenced from https://gist.github.com/gyglim/1f8dfb1b5c82627ae3efcfbbadb9f514
 import tensorflow as tf
 import numpy as np
 import scipy.misc
@@ -25,7 +26,7 @@ class Logger(object):
         """Log a list of images."""
 
         img_summaries = []
-            # Write the image to a string
+        # Write the image to a string
         try:
             s = StringIO()
         except:

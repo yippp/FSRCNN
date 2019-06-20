@@ -28,7 +28,8 @@ for root, dirs, files in os.walk("./test/Set5"):
             for x in range(nx):
                 for y in range(ny):
                     name = "./test/5cut/" + afile.replace('.bmp', '_' + str(n) + '.bmp')
-                    im2 = im.crop((floor(x/nx*im.size[0]), floor(y/ny*im.size[1]), floor(x/nx*im.size[0]) + x_cut, floor(y/ny*im.size[1]) + y_cut))
+                    im2 = im.crop((floor(x / nx * im.size[0]), floor(y / ny * im.size[1]),
+                                   floor(x / nx * im.size[0]) + x_cut, floor(y / ny * im.size[1]) + y_cut))
                     check = np.asarray(im2)
                     if not check.max() == 0:
                         im2.save(name)

@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torch import mean, sqrt, pow
 
+
 class HuberLoss(nn.Module):
     def __init__(self, delta=1):
         super(HuberLoss, self).__init__()
@@ -11,6 +12,7 @@ class HuberLoss(nn.Module):
     def forward(self, input, target):
         loss = self.SmoothL1Loss(input / self.delta, target / self.delta)
         return loss * self.delta * self.delta
+
 
 class CharbonnierLoss(nn.Module):
     def __init__(self, delta=1e-3):

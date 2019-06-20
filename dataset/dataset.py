@@ -9,20 +9,20 @@ from os import listdir
 from os.path import join
 
 def is_image_file(filename):
-    '''
+    """
     Check wheather the file is a image file.
     :param filename: name of the file
     :return: bool value shows that whether it is a image
-    '''
+    """
     return any(filename.endswith(extension) for extension in [".png", ".jpg", ".jpeg", ".bmp"])
 
 
 def load_img(filepath):
-    '''
+    """
     Load the image and get the luminance data.
     :param filepath: path of the image.
     :return: luminance data
-    '''
+    """
     img = Image.open(filepath).convert('YCbCr')
     y, _, _ = img.split()
     return y

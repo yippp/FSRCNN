@@ -1,11 +1,11 @@
 clear; close all;
 %% settings
-folder = '91-aug';%
-savepath = '91_12.h5';%
-size_input = 12;% There are 4 pixels padding. Paper presents 7
-size_label = 20;% (11-4) *3 - (3-1)
+folder = 'train/91-images-aug';%
+savepath = 'train/91.h5';%
+size_input = 11;% There are 4 pixels padding. Paper presents 7
+size_label = 19;% (11-4) *3 - (3-1)
 scale = 3;
-stride = 12;
+stride = 4;
 
 %% initialization
 data = zeros(size_input, size_input, 1, 1);
